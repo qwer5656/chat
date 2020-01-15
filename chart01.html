@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,65 +8,69 @@
     <title>Document</title>
     <script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
     <script>
-    window.onload=function()
-    {
-        var config = {
-        databaseURL: "https://chat2019-ab75f.firebaseio.com/"
-        };
-        firebase.initializeApp(config);
-        let firebaseobj=firebase.database().ref("chatinfo/");
-        document.querySelector("#bt").addEventListener("click",function()
-        {
-        let name=document.querySelector("#name").value;
-        let text=document.querySelector("#clienttext").value;
-        let date=new Date();
-        let year=judgenum(date.getHours());
-        let month=judgenum(date.getMinutes());
-        let day=judgenum(date.getSeconds());
-        time=year+":"+month+":"+day;
-        firebaseobj.push({
-            name:name,
-            text:text,
-            time:time,
-        });
-        });
-        firebaseobj.on('value',function(snapshot){
-            let messagebox=document.querySelector("#messagebox");
-            messagebox.innerHTML="";
-            for(var val in snapshot.val())
-            {
-                let str="";
-                str+="<div><span class='gray'>"+snapshot.val()[val].time+"</span>";
-                str+=" "+snapshot.val()[val].name;
-                str+=":"+snapshot.val()[val].text+"</div>";
-                messagebox.innerHTML+=str;
+        window.onload = function () {
+            var config = {
+                databaseURL: "https://chat2019-ab75f.firebaseio.com/"
+            };
+            firebase.initializeApp(config);
+            let judge = false;
+            let firebaseobj = firebase.database().ref("chatinfotest/");
+            document.querySelector("#clienttext").addEventListener("focus", function () {
+                judge = true;
+            });
+            document.querySelector("#clienttext").addEventListener("focusout", function () {
+                judge = false;
+            });
+            window.addEventListener("keyup", e => {
+                if (e.keyCode == 13 && judge == true) {
+                    let name = document.querySelector("#name").value;
+                    let text = document.querySelector("#clienttext").value;
+                    let date = new Date();
+                    let year = judgenum(date.getHours());
+                    let month = judgenum(date.getMinutes());
+                    let day = judgenum(date.getSeconds());
+                    time = year + ":" + month + ":" + day;
+                    firebaseobj.push({
+                        name: name,
+                        text: text,
+                        time: time,
+                    });
+                }
+            })
+            firebaseobj.on('value', function (snapshot) {
+                let messagebox = document.querySelector("#messagebox");
+                messagebox.innerHTML = "";
+                for (var val in snapshot.val()) {
+                    let str = "";
+                    str += "<div><span class='gray'>" + snapshot.val()[val].time + "</span>";
+                    str += " " + snapshot.val()[val].name;
+                    str += ":" + snapshot.val()[val].text + "</div>";
+                    messagebox.innerHTML += str;
+                }
+            });
+            //判定是否加0
+            function judgenum(num) {
+                if (num < 10) {
+                    num = "0" + num;
+                }
+                return num;
             }
-        });
-        //判定是否加0
-        function judgenum(num)
-        {
-            if(num<10)
-            {
-              num="0"+num;
-            }
-            return num;
         }
-    }
-   
+
     </script>
     <style>
-    .gray
-    {
-        color:#cecece;
-    }
+        .gray {
+            color: #cecece;
+        }
     </style>
 </head>
+
 <body>
     <label for="">名稱:</label><input type="text" id="name"><br><br>
     <label for="">文字:</label><input type="text" id="clienttext"><br><br>
-    <input type="button" value="傳送" id="bt">
     <div id="messagebox">
 
     </div>
 </body>
+
 </html>
