@@ -24,7 +24,7 @@
             window.addEventListener("keyup", e => {
                 if (e.keyCode == 13 && judge == true) {
                     let name = document.querySelector("#name").value;
-                    let text = document.querySelector("#clienttext").value;
+                    let text = document.querySelector("#clienttext");
                     let date = new Date();
                     let year = judgenum(date.getHours());
                     let month = judgenum(date.getMinutes());
@@ -32,9 +32,10 @@
                     time = year + ":" + month + ":" + day;
                     firebaseobj.push({
                         name: name,
-                        text: text,
+                        text: text.value,
                         time: time,
                     });
+                    text.value="";
                 }
             })
             firebaseobj.on('value', function (snapshot) {
