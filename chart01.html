@@ -9,18 +9,30 @@
     <script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
     <script>
         window.onload = function () {
+            
             var config = {
                 databaseURL: "https://chat2019-ab75f.firebaseio.com/"
             };
             firebase.initializeApp(config);
-            let username=window.sessionStorage["user"];
+            let username = window.sessionStorage["user"];
             let judge = false;
-            let firebaseobj = firebase.database().ref("chatinfo1/");
+            let focus=0;
+            let firebaseobj = firebase.database().ref("chatinfo11/");
+            let curlen;
+            let obj;
             document.querySelector("#clienttext").addEventListener("focus", function () {
                 judge = true;
             });
             document.querySelector("#clienttext").addEventListener("focusout", function () {
                 judge = false;
+            });
+            window.addEventListener("focus", function () {
+                focus=1;
+                init();
+            });
+            window.addEventListener("blur", function () {
+                focus=2;
+               
             });
             window.addEventListener("keyup", e => {
                 if (e.keyCode == 13 && judge == true) {
@@ -35,8 +47,9 @@
                         name: name,
                         text: text.value,
                         time: time,
+                        message: 0,
                     });
-                    text.value="";
+                    text.value = "";
                 }
             })
 
@@ -47,62 +60,105 @@
                 }
                 return num;
             }
-            document.querySelector("#loginbutton").addEventListener("click",function()
-            {
-                let username=document.querySelector("#username").value;
-                let password=document.querySelector("#password").value;
-                if(username.trim()!==""&&password.trim()!=="")
-                {
-                    document.querySelector(".messagewrap").style.display="block";
-                    document.querySelector(".login").style.display="none";
-                    window.sessionStorage["user"]=username;
+            document.querySelector("#loginbutton").addEventListener("click", function () {
+                let username = document.querySelector("#username").value;
+                let password = document.querySelector("#password").value;
+                if (username.trim() !== "" && password.trim() !== "") {
+                    document.querySelector(".messagewrap").style.display = "block";
+                    document.querySelector(".login").style.display = "none";
+                    window.sessionStorage["user"] = username;
                     load();
 
                 }
-                else
-                {
-                    let str="";
-                    if(username.trim()=="")
-                    str+="帳戶請填寫\n";
-                    if(password.trim()=="")
-                    str+="密碼請填寫\n";
+                else {
+                    let str = "";
+                    if (username.trim() == "")
+                        str += "帳戶請填寫\n";
+                    if (password.trim() == "")
+                        str += "密碼請填寫\n";
                     alert(str);
                 }
             });
-            if(!username)
-            {
-                document.querySelector(".login").style.display="flex";
+            if (!username) {
+                document.querySelector(".login").style.display = "flex";
             }
-            else
+            else {
+                document.querySelector(".messagewrap").style.display = "block";
+                document.querySelector(".login").style.display = "none";
+                init();
+            }
+            function load() {
+                console.log("load");
+                firebaseobj.on('value', function (snapshot) {
+                    let messagebox = document.querySelector("#messagebox");
+                    let name = window.sessionStorage["user"];
+                    let num = 0;
+                    obj=snapshot.val();
+                    curlen = Object.keys(snapshot.val()).length;
+                    messagebox.innerHTML = "";
+                    for (var val in snapshot.val()) {
+                        ++num;
+                        let str = "";
+                        if (name == snapshot.val()[val].name) {
+                            if (snapshot.val()[val].message == 0) {
+                                str += "<div>未讀<span class='red'>" + snapshot.val()[val].time + "</span>";
+                            }
+                            else {
+                                str += "<div>已讀<span class='red'>" + snapshot.val()[val].time + "</span>";
+                            }
+
+                            str += " 我";
+                        }
+                        else {
+                            str += "<div><span class='gray'>" + snapshot.val()[val].time + "</span>";
+                            str += " " + snapshot.val()[val].name;
+                        }
+                        str += ":" + snapshot.val()[val].text + "</div>";
+                        messagebox.innerHTML += str;
+                       
+                    }
+
+                });
+                
+            }
+            function init()
             {
-                document.querySelector(".messagewrap").style.display="block";
-                document.querySelector(".login").style.display="none";
+                firebaseobj.once('value', function (snapshot) {
+                    let messagebox = document.querySelector("#messagebox");
+                    let name = window.sessionStorage["user"];
+                  
+                    console.log("iniit");
+                    obj=snapshot.val();
+                    messagebox.innerHTML = "";
+                    for (var val in snapshot.val()) {
+                       
+                        let str = "";
+                        if (name == snapshot.val()[val].name) {
+                            if (snapshot.val()[val].message == 0) {
+                                str += "<div>未讀<span class='red'>" + snapshot.val()[val].time + "</span>";
+                            }
+                            else {
+                                str += "<div>已讀<span class='red'>" + snapshot.val()[val].time + "</span>";
+                            }
+
+                            str += " 我";
+                        }
+                        else {
+                            let updates={};
+                            updates[val+"/message"]=1;
+                            firebaseobj.update(updates);
+                            str += "<div><span class='gray'>" + snapshot.val()[val].time + "</span>";
+                            str += " " + snapshot.val()[val].name;
+                           
+                        }
+                        str += ":" + snapshot.val()[val].text + "</div>";
+                        messagebox.innerHTML += str;
+                       
+                    }
+
+                });
                 load();
             }
-            function load()
-            {
-                firebaseobj.on('value', function (snapshot) {
-                let messagebox = document.querySelector("#messagebox");
-                let name = window.sessionStorage["user"];
-                messagebox.innerHTML = "";
-                for (var val in snapshot.val()) {
-                    let str = "";
-                    if(name==snapshot.val()[val].name)
-                    {
-                        str += "<div><span class='red'>" + snapshot.val()[val].time + "</span>";
-                        str += " 我";
-                    }
-                    else
-                    {
-                        str += "<div><span class='gray'>" + snapshot.val()[val].time + "</span>";
-                        str += " " + snapshot.val()[val].name;
-                    }
-                    str += ":" + snapshot.val()[val].text + "</div>";
-                    messagebox.innerHTML += str;
-                }
-            });
-            }
-
         }
 
     </script>
@@ -110,31 +166,36 @@
         .gray {
             color: #cecece;
         }
-        .red
-        {
-            color:red;
+
+        .red {
+            color: red;
         }
-        .login{
+
+        .login {
             background-color: white;
             width: 300px;
             height: 380px;
-            box-shadow:0px 0px 5px #3e3e3e;
+            box-shadow: 0px 0px 5px #3e3e3e;
             left: 50%;
-            top:50%;
+            top: 50%;
             position: fixed;
-            transform: translate(-50%,-50%);
+            transform: translate(-50%, -50%);
             display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
         }
-        .password,.account,.loginbt
-        {
+
+        .password,
+        .account,
+        .loginbt {
             width: 200px;
             margin: 0px 0px 20px;
-           
+
         }
-        .password input,.account input{
+
+        .password input,
+        .account input {
             width: 100%;
             height: 100%;
             background-color: #f3f3f3;
@@ -144,48 +205,50 @@
             box-sizing: border-box;
         }
 
-        .loginbt input
-        {
+        .loginbt input {
             width: 100%;
             background-color: cadetblue;
             color: white;
             border: 0;
             padding: 10px;
         }
-        .logo
-        {
-            
+
+        .logo {
+
             margin: 0 0 20px 0;
         }
-        .logo img
-        {
-            width:100px;
-            
+
+        .logo img {
+            width: 100px;
+
         }
-        .usertxt
-        {
+
+        .usertxt {
             text-align: center;
             padding: 5px 0;
         }
-        .messagewrap
-        {
+
+        .messagewrap {
             display: none;
         }
     </style>
 </head>
 
 <body>
-    <div class="login" >
-        <div class="logo"><img src="logo.png" alt=""><div class="usertxt">Hi Ueser</div></div>
+    <div class="login">
+        <div class="logo"><img src="picture/logo.png" alt="">
+            <div class="usertxt">Hi Ueser</div>
+        </div>
         <div class="account"><input type="text" placeholder="Username" id="username"></div>
         <div class="password"><input type="password" placeholder="Password" id="password"></div>
         <div class="loginbt"><input type="button" value="Login" id="loginbutton"></div>
-    </div></div>
-    <div class="messagewrap">
-    <input type="text" id="clienttext"><br><br>
-    <div id="messagebox">
-
     </div>
+    </div>
+    <div class="messagewrap">
+        <input type="text" id="clienttext"><br><br>
+        <div id="messagebox">
+
+        </div>
     </div>
 </body>
 
