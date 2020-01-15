@@ -14,7 +14,7 @@
             };
             firebase.initializeApp(config);
             let judge = false;
-            let firebaseobj = firebase.database().ref("chatinfotest/");
+            let firebaseobj = firebase.database().ref("chatinfo/");
             document.querySelector("#clienttext").addEventListener("focus", function () {
                 judge = true;
             });
